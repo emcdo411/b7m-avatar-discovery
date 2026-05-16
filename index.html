@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Butler7Media × AI Avatar Discovery Sprint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #D4A853;
+      --gold2:   #F0C978;
+      --dark:    #080A0F;
+      --panel:   #0E1118;
+      --ink:     #E8E4DC;
+      --muted:   #888;
+      --red:     #C0392B;
+      --teal:    #1ABC9C;
+      --periwinkle: #8E9FD5;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── FILM GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: .6;
+    }
+
+    /* ── BROADCAST TICKER ── */
+    .ticker-bar {
+      background: var(--red);
+      padding: 6px 0;
+      overflow: hidden;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+    }
+    .ticker-track {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker 28s linear infinite;
+    }
+    .ticker-track span {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .12em;
+      color: #fff;
+      padding: 0 40px;
+    }
+    .ticker-track span::before {
+      content: '● ';
+      color: #FFD700;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── BROADCAST HEADER ── */
+    .broadcast-nav {
+      position: fixed;
+      top: 28px; left: 0; right: 0;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 40px;
+      background: rgba(8,10,15,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(212,168,83,.2);
+    }
+    .nav-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: .14em;
+      color: var(--gold);
+    }
+    .nav-brand span { color: var(--ink); }
+    .live-bug {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--red);
+      padding: 5px 14px;
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      color: #fff;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      animation: livepulse 1s ease-in-out infinite;
+    }
+    @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 40px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Radial broadcast glow */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, rgba(212,168,83,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Scan lines */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,.06) 3px,
+        rgba(0,0,0,.06) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* Corner broadcast marks */
+    .corner {
+      position: absolute;
+      width: 40px; height: 40px;
+      border-color: rgba(212,168,83,.4);
+      border-style: solid;
+    }
+    .corner-tl { top: 60px; left: 40px; border-width: 2px 0 0 2px; }
+    .corner-tr { top: 60px; right: 40px; border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: 40px; left: 40px; border-width: 0 0 2px 2px; }
+    .corner-br { bottom: 40px; right: 40px; border-width: 0 2px 2px 0; }
+
+    .eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp .8s ease .3s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(64px, 10vw, 140px);
+      line-height: .92;
+      letter-spacing: .04em;
+      color: var(--ink);
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp .9s ease .5s forwards;
+    }
+    .hero-title .gold { color: var(--gold); }
+    .hero-title .outline {
+      -webkit-text-stroke: 2px var(--ink);
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(16px, 2.5vw, 24px);
+      font-style: italic;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.5;
+      margin-bottom: 56px;
+      opacity: 0;
+      animation: fadeUp .9s ease .7s forwards;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 0;
+      animation: fadeUp .9s ease .9s forwards;
+    }
+    .btn-primary {
+      background: var(--gold);
+      color: var(--dark);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .2s;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    }
+    .btn-primary:hover { background: var(--gold2); transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 15px 36px;
+      border: 1px solid rgba(232,228,220,.3);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(24px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ── METRICS STRIP — TV COMMERCIAL STYLE ── */
+    .metrics-strip {
+      background: var(--gold);
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .metrics-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .metric-block {
+      padding: 48px 32px;
+      text-align: center;
+      border-right: 1px solid rgba(0,0,0,.15);
+      position: relative;
+      overflow: hidden;
+      transition: background .25s;
+    }
+    .metric-block:last-child { border-right: none; }
+    .metric-block:hover { background: rgba(255,255,255,.12); }
+    .metric-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(56px, 6vw, 88px);
+      line-height: 1;
+      color: var(--dark);
+      letter-spacing: .02em;
+    }
+    .metric-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,.6);
+      margin-top: 8px;
+    }
+    .metric-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: rgba(0,0,0,.45);
+      margin-top: 4px;
+      letter-spacing: .08em;
+    }
+
+    /* ── BROADCAST SECTION DIVIDER ── */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+    .divider-line { flex: 1; height: 1px; background: rgba(212,168,83,.2); }
+    .divider-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* ── SECTION BASE ── */
+    .section {
+      padding: 100px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── WHAT YOU GET — PBS CARD GRID ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+      background: rgba(212,168,83,.1);
+      border: 1px solid rgba(212,168,83,.15);
+    }
+    .card {
+      background: var(--panel);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background .25s;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s ease;
+    }
+    .card:hover { background: #13151f; }
+    .card:hover::before { transform: scaleX(1); }
+    .card-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      color: rgba(212,168,83,.15);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .card-body {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .card-tag {
+      display: inline-block;
+      margin-top: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--gold);
+      border: 1px solid rgba(212,168,83,.3);
+      padding: 3px 10px;
+    }
+
+    /* ── PIPELINE DIAGRAM ── */
+    .pipeline-wrap {
+      background: var(--panel);
+      border: 1px solid rgba(212,168,83,.15);
+      padding: 56px 48px;
+      position: relative;
+    }
+    .pipeline-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .pipe-node {
+      flex: 1;
+      min-width: 140px;
+      text-align: center;
+      padding: 20px 12px;
+      position: relative;
+    }
+    .pipe-node::after {
+      content: '→';
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold);
+      font-size: 20px;
+    }
+    .pipe-node:last-child::after { display: none; }
+    .pipe-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(212,168,83,.1);
+      border: 1px solid rgba(212,168,83,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 10px;
+    }
+    .pipe-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .pipe-tool {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── TIMELINE STRIP ── */
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+    .tl-item {
+      position: relative;
+      padding: 0 0 40px 32px;
+    }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px rgba(212,168,83,.5);
+    }
+    .tl-days {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .14em;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .tl-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .tl-body {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 560px;
+    }
+    .tl-milestone {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      color: #fff;
+      background: rgba(212,168,83,.25);
+      border-left: 2px solid var(--gold);
+      padding: 4px 12px;
+    }
+
+    /* ── PRICING BLOCK — TV COMMERCIAL HERO ── */
+    .pricing-hero {
+      background: var(--panel);
+      border: 1px solid rgba(212,168,83,.2);
+      padding: 72px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-hero::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(212,168,83,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .price-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .22em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .price-big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(80px, 14vw, 180px);
+      line-height: .88;
+      color: var(--gold);
+      letter-spacing: .02em;
+    }
+    .price-label {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: rgba(212,168,83,.1);
+      max-width: 700px;
+      margin: 0 auto 48px;
+      text-align: left;
+    }
+    .price-item {
+      background: var(--dark);
+      padding: 20px 24px;
+    }
+    .price-item-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .price-item-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* ── VENDOR BADGES ── */
+    .vendor-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .vendor-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 8px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .08em;
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .vendor-badge:hover { border-color: var(--gold); color: var(--gold); }
+    .vendor-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+    /* ── BROADCAST FOOTER ── */
+    footer {
+      background: #050608;
+      border-top: 1px solid rgba(212,168,83,.12);
+      padding: 60px 60px 40px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 60px;
+      max-width: 1200px;
+      margin: 0 auto 48px;
+    }
+    .footer-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: .12em;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .footer-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .footer-heading {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .footer-link {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color .2s;
+    }
+    .footer-link:hover { color: var(--ink); }
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #444;
+      letter-spacing: .1em;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: .04em;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .section-title .gold { color: var(--gold); }
+    .section-intro {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 560px;
+      margin-bottom: 48px;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── GOVERNANCE GRID ── */
+    .gov-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2px;
+      background: rgba(212,168,83,.08);
+    }
+    .gov-item {
+      background: var(--panel);
+      padding: 28px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .gov-icon {
+      width: 36px; height: 36px;
+      background: rgba(212,168,83,.1);
+      border: 1px solid rgba(212,168,83,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .gov-text-title {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .gov-text-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* ── QUOTE BLOCK ── */
+    .quote-block {
+      border-left: 3px solid var(--gold);
+      padding: 32px 40px;
+      background: var(--panel);
+      margin: 48px 0;
+    }
+    .quote-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(20px, 3vw, 28px);
+      font-style: italic;
+      line-height: 1.45;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+    .quote-attr {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .12em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+      .metrics-inner { grid-template-columns: repeat(2, 1fr); }
+      .price-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .section { padding: 60px 24px; }
+      .broadcast-nav { padding: 14px 20px; }
+      .pipeline-row { flex-direction: column; }
+      .pipe-node::after { content: '↓'; right: auto; left: 50%; top: auto; bottom: -14px; transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-track">
+      <span>BUTLER7MEDIA AI AVATAR DISCOVERY SPRINT NOW ACTIVE</span>
+      <span>FIXED PRICE $2,500 · 14 DAYS · ZERO RISK</span>
+      <span>VOICE CLONE · RENDERED AVATAR · EQUESTRIAN CONTENT PIPELINE</span>
+      <span>EPOCH FRAMEWORKS LLC · FORT WORTH, TX · DACR LICENSE V2.7</span>
+      <span>10X CONTENT OUTPUT · NO ADDITIONAL STUDIO TIME</span>
+      <span>BUTLER7MEDIA AI AVATAR DISCOVERY SPRINT NOW ACTIVE</span>
+      <span>FIXED PRICE $2,500 · 14 DAYS · ZERO RISK</span>
+      <span>VOICE CLONE · RENDERED AVATAR · EQUESTRIAN CONTENT PIPELINE</span>
+      <span>EPOCH FRAMEWORKS LLC · FORT WORTH, TX · DACR LICENSE V2.7</span>
+      <span>10X CONTENT OUTPUT · NO ADDITIONAL STUDIO TIME</span>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="broadcast-nav">
+    <div class="nav-brand">BUTLER7MEDIA <span>× EPOCH</span></div>
+    <div style="display:flex;gap:20px;align-items:center;">
+      <a href="#deliverables" style="color:var(--muted);text-decoration:none;font-size:12px;letter-spacing:.08em;font-family:'DM Mono',monospace;">DELIVERABLES</a>
+      <a href="#pipeline" style="color:var(--muted);text-decoration:none;font-size:12px;letter-spacing:.08em;font-family:'DM Mono',monospace;">PIPELINE</a>
+      <a href="#pricing" style="color:var(--muted);text-decoration:none;font-size:12px;letter-spacing:.08em;font-family:'DM Mono',monospace;">PRICING</a>
+      <div class="live-bug"><div class="live-dot"></div>LIVE SPRINT</div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <p class="eyebrow">Epoch Frameworks LLC · Butler7Media LLC · AI Avatar Discovery Sprint v1.0</p>
+
+    <h1 class="hero-title">
+      YOUR VOICE.<br>
+      <span class="gold">EVERYWHERE.</span><br>
+      <span class="outline">ALWAYS ON.</span>
+    </h1>
+
+    <p class="hero-sub">
+      A 14-day sprint that transforms Butler7Media from a human-speed content operation into an AI-native media platform — built around the identity you already own.
+    </p>
+
+    <div class="hero-cta-row">
+      <a href="#pricing" class="btn-primary">View the Sprint Offer</a>
+      <a href="https://github.com/emcdo411/b7m-avatar-discovery" target="_blank" class="btn-ghost">View on GitHub</a>
+    </div>
+  </section>
+
+  <!-- METRICS STRIP -->
+  <div class="metrics-strip">
+    <div class="metrics-inner">
+      <div class="metric-block">
+        <div class="metric-number" id="cnt-days">0</div>
+        <div class="metric-label">Days to Deploy</div>
+        <div class="metric-sub">Fixed-price sprint</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-number">10×</div>
+        <div class="metric-label">Content Output</div>
+        <div class="metric-sub">Without extra studio time</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-number" id="cnt-price">$0</div>
+        <div class="metric-label">Fixed Price</div>
+        <div class="metric-sub">Zero scope creep risk</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-number" id="cnt-del">0</div>
+        <div class="metric-label">Deliverables</div>
+        <div class="metric-sub">Working artifacts only</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT YOU GET -->
+  <section class="section reveal" id="deliverables">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">What You Get</div>
+      <div class="divider-line"></div>
+    </div>
+    <h2 class="section-title">10 <span class="gold">WORKING</span> ARTIFACTS</h2>
+    <p class="section-intro">No slide decks. No vaporware. Every deliverable is a functional asset Butler7Media owns outright by Day 14.</p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-number">01</div>
+        <div class="card-title">Governance Package</div>
+        <div class="card-body">Signed Likeness Rights Agreement, Voice Clone Consent Form, and DACR v2.7 carve-out. Your name stays clean.</div>
+        <div class="card-tag">Day 1 · PDF</div>
+      </div>
+      <div class="card">
+        <div class="card-number">02</div>
+        <div class="card-title">Voice Clone Baseline</div>
+        <div class="card-body">John Butler's voice trained on ElevenLabs Professional tier. Emotional variants. Broadcast-grade fidelity.</div>
+        <div class="card-tag">Day 3 · Audio Files</div>
+      </div>
+      <div class="card">
+        <div class="card-number">03</div>
+        <div class="card-title">Branded Avatar</div>
+        <div class="card-body">HeyGen avatar built from reference footage with Butler7Media brand frame, lower-third, and station identity.</div>
+        <div class="card-tag">Day 5 · Avatar Asset</div>
+      </div>
+      <div class="card">
+        <div class="card-number">04</div>
+        <div class="card-title">Pipeline Architecture</div>
+        <div class="card-body">Complete content pipeline diagram mapped to Butler7Media's existing workflows. Ready to scale.</div>
+        <div class="card-tag">Day 7 · PDF + MD</div>
+      </div>
+      <div class="card">
+        <div class="card-number">05</div>
+        <div class="card-title">3 Equestrian Segments</div>
+        <div class="card-body">Real headlines. Real voice. Real avatar. Three rendered segments proving the pipeline's repeatability.</div>
+        <div class="card-tag">Day 10 · MP4</div>
+      </div>
+      <div class="card">
+        <div class="card-number">06</div>
+        <div class="card-title">60-Second Hero Demo</div>
+        <div class="card-body">The flagship deliverable. A broadcast-quality AI avatar video that opens every future conversation.</div>
+        <div class="card-tag">Day 11 · MP4</div>
+      </div>
+      <div class="card">
+        <div class="card-number">07</div>
+        <div class="card-title">ROI Estimate Model</div>
+        <div class="card-body">Current content output vs. AI-native projected output. Revenue upside modeled at scale.</div>
+        <div class="card-tag">Day 12 · PDF</div>
+      </div>
+      <div class="card">
+        <div class="card-number">08</div>
+        <div class="card-title">Analytics Dashboard</div>
+        <div class="card-body">Live production metrics and content intelligence tracking from day one of pipeline operation.</div>
+        <div class="card-tag">Day 12 · Live</div>
+      </div>
+      <div class="card">
+        <div class="card-number">09</div>
+        <div class="card-title">Phase 2 Roadmap</div>
+        <div class="card-body">Conversational avatar agent architecture and pricing options for the Month 4+ interactive deployment.</div>
+        <div class="card-tag">Day 13 · PDF</div>
+      </div>
+      <div class="card">
+        <div class="card-number">10</div>
+        <div class="card-title">Sprint Readout</div>
+        <div class="card-body">In-person DFW or virtual. Full review of every artifact, the architecture, and the path forward.</div>
+        <div class="card-tag">Day 14 · Presentation</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="section reveal" id="pipeline">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">Content Pipeline</div>
+      <div class="divider-line"></div>
+    </div>
+    <h2 class="section-title">HOW THE <span class="gold">MACHINE</span> WORKS</h2>
+    <p class="section-intro">John Butler's editorial voice, running at scale. Every step is auditable. Every output is approved by a human before it ships.</p>
+
+    <div class="pipeline-wrap">
+      <div class="pipeline-row">
+        <div class="pipe-node">
+          <div class="pipe-icon">📡</div>
+          <div class="pipe-label">Ingest</div>
+          <div class="pipe-tool">RSS / Event Feeds</div>
+        </div>
+        <div class="pipe-node">
+          <div class="pipe-icon">✍️</div>
+          <div class="pipe-label">Script Gen</div>
+          <div class="pipe-tool">LLM + RAG</div>
+        </div>
+        <div class="pipe-node">
+          <div class="pipe-icon">🎙️</div>
+          <div class="pipe-label">Voice</div>
+          <div class="pipe-tool">ElevenLabs Pro</div>
+        </div>
+        <div class="pipe-node">
+          <div class="pipe-icon">🎬</div>
+          <div class="pipe-label">Render</div>
+          <div class="pipe-tool">HeyGen</div>
+        </div>
+        <div class="pipe-node">
+          <div class="pipe-icon">✅</div>
+          <div class="pipe-label">Review Gate</div>
+          <div class="pipe-tool">Human Approval</div>
+        </div>
+        <div class="pipe-node">
+          <div class="pipe-icon">📺</div>
+          <div class="pipe-label">Distribute</div>
+          <div class="pipe-tool">KWJB · YT · Social</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vendor-row" style="margin-top:32px;">
+      <div class="vendor-badge"><div class="vendor-dot"></div>HeyGen — Avatar Renderer</div>
+      <div class="vendor-badge"><div class="vendor-dot"></div>ElevenLabs Pro — Voice Clone</div>
+      <div class="vendor-badge"><div class="vendor-dot"></div>LangGraph — Orchestration</div>
+      <div class="vendor-badge"><div class="vendor-dot"></div>Tavus Phoenix — Phase 2 Real-Time</div>
+      <div class="vendor-badge"><div class="vendor-dot"></div>n8n — Distribution Agent</div>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="section reveal">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">14-Day Execution</div>
+      <div class="divider-line"></div>
+    </div>
+    <h2 class="section-title">THE <span class="gold">14-DAY</span> PLAN</h2>
+    <p class="section-intro" style="margin-bottom:48px;">Four milestones. One decision point. Zero ambiguity.</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-days">DAYS 1–3 · WEEK ONE</div>
+        <div class="tl-title">Intake and Voice Architecture</div>
+        <div class="tl-body">Governance package signed. 30-minute reference footage session. ElevenLabs Professional voice model training initiated. Brand intake completed. Equestrian and travel RSS feeds validated and integrated.</div>
+        <div class="tl-milestone">Milestone: Voice clone baseline approved by John Butler</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-days">DAYS 4–7 · WEEK ONE</div>
+        <div class="tl-title">Pipeline Build and Avatar Creation</div>
+        <div class="tl-body">HeyGen avatar built from approved reference footage. Script generator configured with editorial voice filter — John's standards, not generic AI output. Brand frame applied. First internal render reviewed and refined.</div>
+        <div class="tl-milestone">Milestone: Internal pipeline producing consistent branded output</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-days">DAYS 8–11 · WEEK TWO</div>
+        <div class="tl-title">Demo Production and Refinement</div>
+        <div class="tl-body">60-second hero demo produced — real headline, real voice, real avatar. Two additional equestrian segments prove repeatability. Distribution agent configured. ROI model built.</div>
+        <div class="tl-milestone">Milestone: John Butler views and approves hero demo</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-days">DAYS 12–14 · SPRINT CLOSE</div>
+        <div class="tl-title">Delivery and Readout</div>
+        <div class="tl-body">Full sprint readout — in-person DFW preferred. All 10 artifacts handed off. Phase 2 roadmap presented. Decision made.</div>
+        <div class="tl-milestone">Milestone: Sprint closed. Next step defined.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <section class="section reveal">
+    <div class="quote-block">
+      <div class="quote-text">"Your credibility as a broadcaster took 15 years to build. Every piece of AI content we produce under this engagement is traceable, auditable, and protected. Your name is on it — it stays clean."</div>
+      <div class="quote-attr">Maurice McDonald · AI Adoption Architect · Epoch Frameworks LLC (2026)</div>
+    </div>
+  </section>
+
+  <!-- GOVERNANCE -->
+  <section class="section reveal">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">Governance</div>
+      <div class="divider-line"></div>
+    </div>
+    <h2 class="section-title">GOVERNED. <span class="gold">AUDITABLE.</span> PROTECTED.</h2>
+    <p class="section-intro">Most avatar vendors sell capability. Epoch sells capability plus auditability. Enterprises and media operations pay a significant premium for the second word.</p>
+
+    <div class="gov-grid">
+      <div class="gov-item"><div class="gov-icon">📝</div><div><div class="gov-text-title">Likeness Rights Agreement</div><div class="gov-text-body">Scope, duration, and territory defined. 12-month renewable. US territory.</div></div></div>
+      <div class="gov-item"><div class="gov-icon">🎙️</div><div><div class="gov-text-title">Voice Clone Consent</div><div class="gov-text-body">Explicit written permission for ElevenLabs model training on John Butler's voice.</div></div></div>
+      <div class="gov-item"><div class="gov-icon">🔒</div><div><div class="gov-text-title">DACR License v2.7</div><div class="gov-text-body">Pipeline architecture IP belongs to Epoch. All content and video outputs belong to Butler7Media.</div></div></div>
+      <div class="gov-item"><div class="gov-icon">🔍</div><div><div class="gov-text-title">Full Audit Trail</div><div class="gov-text-body">Every generation timestamped — who, when, what prompt, what output.</div></div></div>
+      <div class="gov-item"><div class="gov-icon">💧</div><div><div class="gov-text-title">AI Content Watermarking</div><div class="gov-text-body">All video outputs watermarked for FTC compliance and identity protection.</div></div></div>
+      <div class="gov-item"><div class="gov-icon">🛡️</div><div><div class="gov-text-title">Incident Response</div><div class="gov-text-body">Documented protocol for any deepfake misuse or identity breach scenario.</div></div></div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section reveal" id="pricing">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">Investment</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="pricing-hero">
+      <div class="price-eyebrow">Discovery Sprint · Fixed Price · Zero Risk</div>
+      <div class="price-big">$2,500</div>
+      <div class="price-label">14 days. 10 artifacts. All outputs owned by Butler7Media.</div>
+
+      <div class="price-grid">
+        <div class="price-item">
+          <div class="price-item-label">Payment</div>
+          <div class="price-item-value">50% at signing · 50% Day 7</div>
+        </div>
+        <div class="price-item">
+          <div class="price-item-label">Duration</div>
+          <div class="price-item-value">14 calendar days</div>
+        </div>
+        <div class="price-item">
+          <div class="price-item-label">Tools Included</div>
+          <div class="price-item-value">HeyGen + ElevenLabs access</div>
+        </div>
+      </div>
+
+      <a href="https://github.com/emcdo411/b7m-avatar-discovery" target="_blank" class="btn-primary" style="display:inline-block;margin-bottom:16px;">View Full Brief on GitHub</a>
+      <p style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.08em;">If you don't see the value at Day 14 — you walk away with all assets, the governance package, and a pipeline architecture you can take anywhere.</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">EPOCH FRAMEWORKS LLC</div>
+        <div class="footer-body">Fort Worth, TX · AI Adoption Architecture · Fractional CXO · Operational Intelligence<br><br>Founded by Maurice McDonald — U.S. Army Veteran, 82nd Airborne Division. 25-year enterprise technologist. All frameworks protected under DACR License v2.7.</div>
+      </div>
+      <div>
+        <div class="footer-heading">Repository</div>
+        <a href="https://github.com/emcdo411/b7m-avatar-discovery" target="_blank" class="footer-link">GitHub Repo</a>
+        <a href="https://github.com/emcdo411/b7m-avatar-discovery/blob/main/README.md" target="_blank" class="footer-link">README.md</a>
+        <a href="https://github.com/emcdo411/b7m-avatar-discovery/blob/main/butler7media-discovery-sprint.md" target="_blank" class="footer-link">Sprint Brief</a>
+      </div>
+      <div>
+        <div class="footer-heading">Frameworks</div>
+        <a href="#" class="footer-link">AI Avatar Architect v1.0</a>
+        <a href="#" class="footer-link">DACR License v2.7</a>
+        <a href="#" class="footer-link">AI Adoption Architect v6.5</a>
+        <a href="#" class="footer-link">EBT v2.7</a>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <span>© 2026 EPOCH FRAMEWORKS LLC · DACR LICENSE V2.7 · McDONALD (2026)</span>
+      <span>BUTLER7MEDIA AI AVATAR DISCOVERY SPRINT V1.0</span>
+    </div>
+  </footer>
+
+  <!-- COUNTER ANIMATION -->
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Counter animation
+    function animateCounter(el, target, prefix, suffix, duration) {
+      let start = 0;
+      const step = target / (duration / 16);
+      const timer = setInterval(() => {
+        start += step;
+        if (start >= target) { start = target; clearInterval(timer); }
+        el.textContent = prefix + Math.floor(start).toLocaleString() + suffix;
+      }, 16);
+    }
+
+    const metricsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          animateCounter(document.getElementById('cnt-days'), 14, '', '', 1200);
+          animateCounter(document.getElementById('cnt-price'), 2500, '$', '', 1400);
+          animateCounter(document.getElementById('cnt-del'), 10, '', '', 1000);
+          metricsObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    metricsObserver.observe(document.querySelector('.metrics-strip'));
+  </script>
+
+</body>
+</html>
